@@ -54,22 +54,22 @@ soup = BeautifulSoup(full_html,"html.parser")#스프한테 분석시킨다.
 content_list = []
 
 #content_list = soup.find('ul').find_all('li')
-for index, i in enumerate(soup.find('ul', {"class" : "type01"}).find_all('li',{"id":re.compile("sp_nws\d+")})):
+for index, tag in enumerate(soup.find('ul', {"class" : "type01"}).find_all('li',{"id":re.compile("sp_nws\d+")})):
     # <ul> 중에 id가 sp_nws로 시작하는 <li>만 모아서
     #Title 저장
     print(index,"번째,")
     try:
-        title = i.find("a","_sp_each_title").get_text()
+        title = tag.find("a","_sp_each_title").get_text()
         print("title:",title)
     except AttributeError:
         print ("NO TITLE")
     
     #url
-    url = i.find("a")["href"]
+    url = tag.find("a")["href"]
     print("url:",url)
     
     #time
-    time_tag = str(i.find("dd",{"class":"txt_inline"})) #dd 텍스트형식으로 저장
+    time_tag = str(tag.find("dd",{"class":"txt_inline"})) #dd 텍스트형식으로 저장
     time_p = re.compile("\d+\w+\s전" or "\d{4}.\d{2}.\d{2}") #n시간 전 or n일 전 or  yyyy.mm.dd.
     time_str = time_p.findall(time_tag)
     print("time:",time_str[0])
@@ -78,7 +78,7 @@ for index, i in enumerate(soup.find('ul', {"class" : "type01"}).find_all('li',{"
     #relatedNews
     num_related = 0
     try:
-        related = i.find("div",{"class":"newr_more"}).get_text()
+        related = tag.find("div",{"class":"newr_more"}).get_text()
         related_p = re.compile("\d+").findall(related) #숫자인거 따오기
         num_related = int(related_p[0])
         print("related news: ",num_related)
@@ -88,7 +88,7 @@ for index, i in enumerate(soup.find('ul', {"class" : "type01"}).find_all('li',{"
 
     #직접달린 연관뉴스들 더하기
     try:
-        dir_related = i.find("ul",{"class":"relation_lst"}).findChildren("li")
+        dir_related = tag.find("ul",{"class":"relation_lst"}).findChildren("li")
         num_dir_related = len(dir_related)
         num_related += num_dir_related
         print("dir_related: ",num_dir_related,"개, 총: ", num_related)

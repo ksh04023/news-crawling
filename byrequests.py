@@ -15,6 +15,7 @@ def loof(query_txt):
     while flag != 1:
         page = 1
         maxpage = 50#검색 범위 임의 지정 -> 5페이지, 숫자를 높일 경우 1일당 검색되는 기사의 양이 많아진다.
+        #ㅇㅅㅇ? 우리가 원하는게 기사수가 얼마나 많은지 구하는건데 max를 정하는건가,,?
         year = current.year
         month = current.month
         day = current.day
