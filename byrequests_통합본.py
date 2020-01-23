@@ -6,7 +6,7 @@ import re
 
 query_txt = input("검색할 키워드 : ")
 date_from_txt = input("검색 시작 날짜(ex, 2020.1.10) : ")#~현재까지
-
+start = time.time()
 class Article:
     def __init__(self, title,time,url):
         self.title = title
@@ -14,7 +14,7 @@ class Article:
         self.url = url
 
     def print(self):
-        print("제목:", self.title, ", 시간: ",self.time, ", 관련뉴스: ",self.related)
+        print("제목:", self.title, ", 시간: ",self.time,"URL: ",self.url, ", 관련뉴스: ",self.related)
 
     def addRelated(self, num):
         self.related = num
@@ -28,7 +28,7 @@ def article_search(query_txt):
     key = 1 #뉴스 기사의 시점을 판단하기 위한 변수
     while flag != 1:
         page = 1
-        maxpage = 50 #검색 범위 임의 지정 -> 5페이지, 숫자를 높일 경우 1일당 검색되는 기사의 양이 많아진다.
+        maxpage = 100 #검색 범위 임의 지정 -> 5페이지, 숫자를 높일 경우 1일당 검색되는 기사의 양이 많아진다.
         #ㅇㅅㅇ? 우리가 원하는게 기사수가 얼마나 많은지 구하는건데 max를 정하는건가,,?
         year = current.year
         month = current.month
@@ -43,6 +43,7 @@ def article_search(query_txt):
             #print(response.status_code)#url을 정상적으로 받았으면 200을 출력
             if response.status_code == 200 :
                 html = BeautifulSoup(response.text,'html.parser')
+                #html = BeautifulSoup(response.content,'lxml')
                 tags = html.select('#main_pack > div.news.mynews.section._prs_nws > ul')[0].find_all('li',{"id":re.compile("sp_nws\d+")})
                 #select('찾으려는 태그의 위치').find_all(태그) 해당 위치의 동일한 태그를 모두 찾는다.
                 #xpath처럼 복사하여 찾을 수 있다.
@@ -52,13 +53,13 @@ def article_search(query_txt):
                     for tag in tags: #이밑에거 함수로 넣을까말까~~
                         try:
                             title = tag.find("a","_sp_each_title").get_text()
-                            print("title:",title)
+                            #print("title:",title)
                         except AttributeError:
                             print ("NO TITLE")
                         
                         #url
                         url = tag.find("a")["href"]
-                        print("url:",url)
+                        #print("url:",url)
                         
                         #time
                         time_tag = str(tag.find("dd",{"class":"txt_inline"})) #dd 텍스트형식으로 저장
@@ -74,7 +75,7 @@ def article_search(query_txt):
                             #print(sub,"일", time_obj.strftime("%Y.%m.%d"))
                             
                         time_str = time_obj.strftime('%Y.%m.%d') #YYYY.mm.dd
-                        print("time:",time,",",time_str)
+                        #print("time:",time,",",time_str)
 
 
                         #relatedNews
@@ -83,19 +84,20 @@ def article_search(query_txt):
                             related = tag.find("div",{"class":"newr_more"}).get_text()
                             related_p = re.compile("\d+").findall(related) #숫자인거 따오기
                             num_related = int(related_p[0])
-                            print("related news: ",num_related)
+                            #print("related news: ",num_related)
                         except AttributeError:
                             num_related = 0
-                            print("NO RELATED")
+                            #print("NO RELATED")
 
                         #직접달린 연관뉴스들 더하기
                         try:
                             dir_related = tag.find("ul",{"class":"relation_lst"}).findChildren("li")
                             num_dir_related = len(dir_related)
                             num_related += num_dir_related
-                            print("dir_related: ",num_dir_related,"개, 총: ", num_related)
+                            #print("dir_related: ",num_dir_related,"개, 총: ", num_related)
                         except AttributeError:
-                            print("NO DIRECTLY RELATED")
+                            num_related += 0
+                            #print("NO DIRECTLY RELATED")
 
                         temp = Article(title,time_str,url)
                         temp.addRelated(num_related)
@@ -112,13 +114,26 @@ def article_search(query_txt):
 
 def sort_by_time(content_list):
     content_sorted = sorted(content_list, key = lambda Article: Article.time)
-    for i in content_sorted:
-        i.print()
+    
+
+def stat_by_time(content_list, stat_time):
+    for article in content_list:
+        if article.time in stat_time.keys(): #key값이 이미 존재하면 추가
+            stat_time.get(article.time).append(article)
+        else: #없으면 새로 만들기
+            stat_time[article.time] = []
+            stat_time[article.time].append(article)
+
+    for key in stat_time.keys(): print(key,", ",len(stat_time[key]),"개")
 
 # title_list = []#제목 리스트
 # url_list = []#url리스트
 content_list = []
 article_search(query_txt)
 print("길이",len(content_list))
-sort_by_time(content_list)
 
+#sort_by_time(content_list) #시간순 정렬
+stat_time = {} #딕셔너리, key = 날짜, value = Article 리스트
+stat_by_time(content_list, stat_time)
+finish = time.time()
+print(finish-start, "걸림")
